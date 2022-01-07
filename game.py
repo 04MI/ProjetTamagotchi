@@ -36,7 +36,7 @@ class Game():
             self.tamagotchi.update()
 
     '''
-    Method that will run in background to update the tamagotchi at each tick
+    Method that will run in the background to update the tamagotchi at each tick
     '''
     def _run(self, mutex):
         while True:
