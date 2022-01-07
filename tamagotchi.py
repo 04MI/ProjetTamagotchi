@@ -17,6 +17,15 @@ class Tamagotchi():
         self.sickness = sickness
 
     '''
+    Health setter
+    '''
+    def setHealth(self, h):
+        if h >= 0:
+            self.health = h
+        else:
+            raise ValueError("tamagotchi's health cannot be neggative")
+
+    '''
     Each tick this method will be called to update the state of the tamagotchi.
     This method is responsible to apply every state modifier of the tamagotchi (eq. update the hunger)
     '''
@@ -24,6 +33,15 @@ class Tamagotchi():
         logging.debug('[Tamagotchi.update()] - performing update')
         # not implemented yet
         pass
+
+    '''
+    Check if the tamagotchi is dead
+    '''
+    def isDead(self):
+        # for the moment we only check the health, but later we should check sickness, hapinness, hunger, ...
+        if self.health <= 0:
+            return True
+        return False
 
     '''
     Simple action, just for test purpose ... feeding, healing, and other should be implemented as this

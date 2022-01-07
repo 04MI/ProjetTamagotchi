@@ -21,7 +21,8 @@ class Game():
     '''
     def feedActions(self):
         self.actions.addAction(Action('S', self.displayStatus, "Get the current status of the tamagotchi"))
-        self.actions.addAction(Action('T', self.tamagotchi.aTest, 'action for test purpose'))
+        self.actions.addAction(Action('T', self.tamagotchi.aTest, 'Action for test purpose'))
+        self.actions.addAction(Action('K', self.killTamagotchi, "Kill the tamagotchi"))
         self.actions.addAction(Action('Q', self.quitGame, "Quit"))
 
     '''
@@ -29,14 +30,17 @@ class Game():
     '''
     def tick(self):
         logging.debug('[Game.tick()] - performing tick')
-        self.tamagotchi.update()
+        if self.tamagotchi.isDead():
+            self.quitGame()
+        else :
+            self.tamagotchi.update()
 
     '''
     Method that will run in background to update the tamagotchi at each tick
     '''
     def _run(self, mutex):
         while True:
-            if self.quit :
+            if self.isEnded() :
                 break
 
             # we use mutex to avoid race condition or any problem with concurrency
@@ -45,6 +49,12 @@ class Game():
             mutex.release()
             
             sleep(1/self.tickrate)
+
+    '''
+    Set the health of the tamagotchi to 0 to kill him
+    '''
+    def killTamagotchi(self):
+        self.tamagotchi.setHealth(0)
 
     '''
     Display the status of the tamagotchi
@@ -72,6 +82,14 @@ class Game():
         self.quit = True
 
     '''
+    check if a game must be ended.
+        - if the quit flag is set
+        - if the tamagotchi is dead
+    '''
+    def isEnded(self):
+        return self.quit or self.tamagotchi.isDead()
+
+    '''
     Run a single game
     '''
     def run(self):
@@ -80,7 +98,7 @@ class Game():
         t_tick.start()
 
         while True:
-            if self.quit:
+            if self.isEnded():
                 break
 
             self.displayMenu()
@@ -93,5 +111,8 @@ class Game():
                 mutex.acquire()
                 self.actions.getHandler(choice)()
                 mutex.release()
+
+        if self.tamagotchi.isDead():
+            print(":'( your tamagotchi is dead")
 
         t_tick.join()
