@@ -1,4 +1,5 @@
 import logging
+from game import Game
 
 class Tamagotchi():
 
@@ -31,8 +32,12 @@ class Tamagotchi():
     '''
     def update(self):
         logging.debug('[Tamagotchi.update()] - performing update')
-        # not implemented yet
-        pass
+        self.hunger = self.hunger + 0.5
+        if self.hunger > 50:
+            self.sickness = self.sickness + 0.5
+            self.happiness = self.happiness -0.5
+            if Game.isSick:
+                self.health = self.health - self.sickness % 100
 
     '''
     Check if the tamagotchi is dead
@@ -46,8 +51,19 @@ class Tamagotchi():
     '''
     Simple action, just for test purpose ... feeding, healing, and other should be implemented as this
     '''
+
     def aTest(self):
         print("just a simple test action to POC")
 
     def __str__(self):
         return f'Tamagotchi(health={self.health}, gender={self.gender}, hunger={self.hunger}, happiness={self.happiness}, sickness={self.sickness})'
+
+    '''
+       Definition of basic functions
+    '''
+
+    def activity_feeding(self):
+        self.hunger = self.hunger - 1
+
+    def activity_healing(self):
+        self.health = self.health + 1
