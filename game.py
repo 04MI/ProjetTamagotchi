@@ -101,13 +101,6 @@ class Game():
         return self.quit or self.tamagotchi.isDead()
 
     '''
-    change the situation of sickness
-    '''
-
-    def isSick(self):
-        if self.tamagotchi.sickness > 50:
-            self.is_sick = True
-    '''
     Run a single game
     '''
 
