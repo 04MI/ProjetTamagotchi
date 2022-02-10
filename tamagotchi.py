@@ -24,19 +24,28 @@ class Tamagotchi():
         if h >= 0:
             self.health = h
         else:
-            raise ValueError("tamagotchi's health cannot be neggative")
+            raise ValueError("tamagotchi's health cannot be negative")
 
+    
+    '''
+       change the situation of sickness
+    '''
+
+    def isSick(self):
+        if self.sickness > 50:
+            self.is_sick = True
+    
     '''
     Each tick this method will be called to update the state of the tamagotchi.
     This method is responsible to apply every state modifier of the tamagotchi (eq. update the hunger)
     '''
     def update(self):
         logging.debug('[Tamagotchi.update()] - performing update')
-        self.hunger = self.hunger + 0.5
+        self.hunger = self.hunger + 0.02
         if self.hunger > 50:
-            self.sickness = self.sickness + 0.5
-            self.happiness = self.happiness -0.5
-            if Game.isSick:
+            self.sickness = self.sickness + 0.02
+            self.happiness = self.happiness -0.02
+            if self.isSick:
                 self.health = self.health - self.sickness % 100
 
     '''
@@ -62,8 +71,8 @@ class Tamagotchi():
        Definition of basic functions
     '''
 
-    def activity_feeding(self):
-        self.hunger = self.hunger - 1
+        def activity_feeding(self):
+        self.hunger = self.hunger - 0.01
 
     def activity_healing(self):
-        self.health = self.health + 1
+        self.health = self.health + 0.01
