@@ -1,6 +1,13 @@
 import logging
+from random import randrange
 
 class Tamagotchi():
+
+    health_Max = 50
+    hunger_Max = 50
+    happiness_Max = 50
+    sickness_Max = 50
+    gender_type = ['"male"','"female"']
 
     '''
     Construct a new tamagotchi with the provided parameters
@@ -15,7 +22,6 @@ class Tamagotchi():
         self.hunger = hunger
         self.happiness = happiness
         self.sickness = sickness
-
     '''
     Health setter
     '''
