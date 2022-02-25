@@ -100,6 +100,7 @@ class Game():
     def isEnded(self):
         return self.quit or self.tamagotchi.isDead()
 
+
     '''
     Run a single game
     '''
