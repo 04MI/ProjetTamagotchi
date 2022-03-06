@@ -1,5 +1,8 @@
 import logging
+import time
 
+from game import Game
+import os
 class Tamagotchi():
 
     '''
@@ -26,14 +29,34 @@ class Tamagotchi():
             raise ValueError("tamagotchi's health cannot be neggative")
 
     '''
+       change the situation of sickness
+    '''
+
+    def isSick(self):
+        if self.sickness > 50:
+            self.is_sick = True
+
+    '''
     Each tick this method will be called to update the state of the tamagotchi.
     This method is responsible to apply every state modifier of the tamagotchi (eq. update the hunger)
     '''
     def update(self):
         logging.debug('[Tamagotchi.update()] - performing update')
-        # not implemented yet
-        pass
-
+        self.hunger = self.hunger + 0.02
+        if self.hunger > 50:
+            self.sickness = self.sickness + 0.02
+            self.happiness = self.happiness -0.02
+            if self.isSick:
+                self.health = self.health - self.sickness % 100
+        os.remove('history.txt')
+        f=open('history.txt', 'a')
+        f.write("health:"+str(self.health)+'\n')
+        f.write("gender:" + str(self.gender) + '\n')
+        f.write("hunger:" + str(self.hunger) + '\n')
+        f.write("happiness:" + str(self.happiness) + '\n')
+        f.write("sickness:" + str(self.sickness) + '\n')
+        f.close()
+        time.sleep(2)
     '''
     Check if the tamagotchi is dead
     '''
@@ -46,8 +69,20 @@ class Tamagotchi():
     '''
     Simple action, just for test purpose ... feeding, healing, and other should be implemented as this
     '''
+
     def aTest(self):
         print("just a simple test action to POC")
 
     def __str__(self):
         return f'Tamagotchi(health={self.health}, gender={self.gender}, hunger={self.hunger}, happiness={self.happiness}, sickness={self.sickness})'
+
+    '''
+       Definition of basic functions
+    '''
+
+    def activity_feeding(self):
+        self.hunger = self.hunger - 0.01
+
+    def activity_healing(self):
+        self.health = self.health + 0.01
+

@@ -1,11 +1,20 @@
 from tamagotchi import Tamagotchi
 from game import Game
-import logging
-
+import loggingS
+import utils as ut
+from decimal import *
 # logging.basicConfig(filename='tamagotchi.log', level=logging.ERROR)
 
 def main():
-    tamagotchi =  Tamagotchi(10,'male', 20, 30, 40)
+
+
+    his=ut.read_history("history.txt")
+    a=float(his[0])
+    b=his[1]
+    c=float(his[2])
+    d=float(his[3])
+    e=float(his[4])
+    tamagotchi =  Tamagotchi(a,b,c, d,e)
     game = Game(30, tamagotchi)
     game.run()
 
