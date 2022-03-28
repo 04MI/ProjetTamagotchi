@@ -1,0 +1,6 @@
+health:100.0
+gender:male
+hunger:5.799999999999964
+happiness:100.0
+sickness:0.0
+lifetime:0
