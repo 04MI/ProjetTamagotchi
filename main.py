@@ -1,22 +1,21 @@
 from tamagotchi import Tamagotchi
-from game import Game
-import loggingS
+from uiGame import UiMenu
 import utils as ut
-from decimal import *
-# logging.basicConfig(filename='tamagotchi.log', level=logging.ERROR)
+
 
 def main():
+    his = ut.read_history("history.txt")
+    health = float(his['health'])
+    gender = his['gender']
+    hunger = float(his['hunger'])
+    happiness = float(his['happiness'])
+    sickness = float(his['sickness'])
+    lifetime = int(his['lifetime'])
+    tamagotchi = Tamagotchi(health, gender, hunger, happiness, sickness, lifetime)
+    game = UiMenu(30, tamagotchi)
+    game.main()
 
-
-    his=ut.read_history("history.txt")
-    a=float(his[0])
-    b=his[1]
-    c=float(his[2])
-    d=float(his[3])
-    e=float(his[4])
-    tamagotchi =  Tamagotchi(a,b,c, d,e)
-    game = Game(30, tamagotchi)
-    game.run()
 
 if __name__ == '__main__':
     main()
+

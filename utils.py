@@ -18,19 +18,15 @@ class Action():
 A list of Action
 '''
 def read_history(his):
-    lines = []
+    output = {}
     filepath = os.path.abspath('.')
     rootdir = os.path.join(filepath, his)
-    with open(rootdir, 'r') as file_to_read:
-       for i in range(5):
-            oldline = file_to_read.readline().strip()
-            linelist=oldline.split(":")
-            line=linelist[1]
-            if not line:
-                break
-            lines.append(line)
-    return lines
-
+    lines = open(rootdir, 'r').readlines()
+    for l in lines:
+        l = l.strip()
+        fields  = l.split(":")
+        output[fields[0]] = fields[1]
+    return output
 
 
 class Actions():
