@@ -16,11 +16,10 @@ SAVE_FILENAME = 'history.txt'
 DAY = 30*60*60*24 
 
 EVOLUTIONS = [
-    {'name': 'bébé', 'delta':[0, DAY], 'sickness_factor':30/SICKNESS_SCALE, 'hunger_amplifier':0.02},
-    {'name': 'enfant', 'delta':[DAY, DAY*2], 'sickness_factor':10/SICKNESS_SCALE, 'hunger_amplifier':0.02},
-    {'name': 'ado', 'delta':[DAY*2, DAY*3], 'sickness_factor':10/SICKNESS_SCALE, 'hunger_amplifier':0.02},
-    {'name': 'adulte', 'delta':[DAY*3, DAY*4], 'sickness_factor':10/SICKNESS_SCALE, 'hunger_amplifier':0.01},
-    {'name': 'vieux', 'delta':[DAY*4, DAY*8], 'sickness_factor':30/SICKNESS_SCALE, 'hunger_amplifier':0.01},
+    {'name': 'bébé', 'delta':[0, DAY], 'sickness_factor':30/SICKNESS_SCALE, 'hunger_amplifier':0.02, "state":"BABY"},
+    {'name': 'enfant', 'delta':[DAY, DAY*3], 'sickness_factor':10/SICKNESS_SCALE, 'hunger_amplifier':0.02, "state":"CHILD"},
+    {'name': 'adulte', 'delta':[DAY*3, DAY*4], 'sickness_factor':10/SICKNESS_SCALE, 'hunger_amplifier':0.01, "state":"ADULT"},
+    {'name': 'vieux', 'delta':[DAY*4, DAY*8], 'sickness_factor':30/SICKNESS_SCALE, 'hunger_amplifier':0.01, "state":"ELDER"},
 ]
 
 class Tamagotchi():
@@ -28,11 +27,12 @@ class Tamagotchi():
     '''
     Construct a new tamagotchi with the provided parameters
     '''
-    def __init__(self, health, gender, hunger, happiness, sickness, lifetime):
+    def __init__(self, name, health, gender, hunger, happiness, sickness, lifetime):
         logging.debug(f'[Tamagotchi.__init__({health},{gender},{hunger},{happiness},{sickness})] - performing __init__')
 
         # use getter/Setter instead of direct assignment
         # those properties are placed only for debug purposes some will be removed, reworked or added later
+        self.name = name
         self.health = health
         self.gender = gender
         self.hunger = hunger
@@ -91,7 +91,7 @@ class Tamagotchi():
     def update(self):
         logging.debug('[Tamagotchi.update()] - performing update')
         self.updateEvolution()
-        self.hunger = self.hunger + HUNGER_MODIFIER
+        self.hunger = (self.hunger + HUNGER_MODIFIER) % 100
         if self.hunger > 50:
             if not self.isSick():
                 self.sickness = SICKNESS_MODIFIER
