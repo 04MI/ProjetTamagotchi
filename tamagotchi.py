@@ -2,6 +2,7 @@ import logging
 import time
 from game import Game
 import os
+import json
 from random import randrange
 
 SICKNESS_MODIFIER = 0.002
@@ -11,7 +12,7 @@ HAPPINESS_FEED = 1
 HUNGER_MODIFIER = 0.02
 HUNGER_FEED = 2
 HEALTH_HEAL = 0.01
-SAVE_FILENAME = 'history.txt'
+SAVE_FILENAME = 'history.json'
 
 DAY = 30*60*60*24 
 
@@ -27,11 +28,9 @@ class Tamagotchi():
     '''
     Construct a new tamagotchi with the provided parameters
     '''
-    def __init__(self, name, health, gender, hunger, happiness, sickness, lifetime):
+    def __init__(self, name, health, gender, hunger, happiness, sickness, lifetime, friends=[]):
         logging.debug(f'[Tamagotchi.__init__({health},{gender},{hunger},{happiness},{sickness})] - performing __init__')
 
-        # use getter/Setter instead of direct assignment
-        # those properties are placed only for debug purposes some will be removed, reworked or added later
         self.name = name
         self.health = health
         self.gender = gender
@@ -39,6 +38,7 @@ class Tamagotchi():
         self.happiness = happiness
         self.sickness = sickness
         self.lifetime = lifetime
+        self.friends = friends
 
         self.updateEvolution()
 
@@ -74,14 +74,8 @@ class Tamagotchi():
             self.sickness = SICKNESS_MODIFIER
 
     def saveState(self):
-        os.remove(SAVE_FILENAME)
-        f=open(SAVE_FILENAME, 'a')
-        f.write("health:" + str(self.health) + '\n')
-        f.write("gender:" + str(self.gender) + '\n')
-        f.write("hunger:" + str(self.hunger) + '\n')
-        f.write("happiness:" + str(self.happiness) + '\n')
-        f.write("sickness:" + str(self.sickness) + '\n')
-        f.write("lifetime:" + str(self.lifetime) + '\n')
+        f=open(SAVE_FILENAME, 'w')
+        f.write(self.toJSON())
         f.close()
 
     '''
@@ -101,6 +95,7 @@ class Tamagotchi():
             self.health = self.health - (self.sickness * 0.01)
         self.fallSick()
         self.lifetime += 1
+        self.saveState()
 
     '''
     Check if the tamagotchi is dead
@@ -124,7 +119,6 @@ class Tamagotchi():
     '''
        Definition of basic functions
     '''
-
     def activity_feeding(self):
         self.hunger = self.hunger - HUNGER_FEED
         self.happiness = (self.happiness + HAPPINESS_FEED) % 100
@@ -134,3 +128,37 @@ class Tamagotchi():
     def activity_healing(self):
         self.sickness = 0
 
+    def addFriend(self, friend):
+        for f in self.friends:
+            if f['name'] == friend['name']:
+                return
+
+        self.friends.append(friend)
+
+    @staticmethod
+    def fromJSON(data):
+        data = json.loads(data)
+        # def __init__(self, name, health, gender, hunger, happiness, sickness, lifetime, friends=[]):
+        return Tamagotchi(
+            data['name'],
+            data['health'],
+            data['gender'],
+            data['hunger'],
+            data['happiness'],
+            data['sickness'],
+            data['lifetime'],
+            data['friends']
+        )
+
+    def toJSON(self):
+        obj = {
+            'name' : self.name,
+            'health' : self.health,
+            'gender' : self.gender,
+            'hunger' : self.hunger,
+            'happiness' : self.happiness,
+            'sickness' : self.sickness,
+            'lifetime' : self.lifetime,
+            'friends' : self.friends
+        }
+        return json.dumps(obj)

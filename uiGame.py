@@ -1,9 +1,15 @@
 from game import Game
 from threading import Thread, Lock
 from tkinter import *
+from tkinter import messagebox
 from time import sleep
 from utils import Action, Actions
+from network import MeetServer, MeetClient
+import json as JSON
 from logging import debug, info
+import re
+
+LINE_HEIGHT = 16
 
 '''
 Super class that represent a typical screen, every screen should herit from this one in order to handle next, back, select button and update.
@@ -30,6 +36,180 @@ class Screen:
 
     def update(self):
         pass
+
+class Meet:
+    def __init__(self):
+        self.ipconfig = None
+
+    def createIpConfig(self, msg):
+        self.sub = Tk()
+        self.sub.resizable(0,0)
+
+        i_name = Text(self.sub, height = 1, width = 10)
+        i_name.grid(column=1, row=0)
+        i_name.insert(END, "127.0.0.1:1337")
+
+        l_name = Label(self.sub, text="Name")
+        l_name.grid(column=0, row=0)
+
+        b_name = Button(self.sub, text=msg, command=lambda input=i_name : self.handleSubIpInput(input))
+        b_name.grid(column=0, row=1)
+
+        self.sub.mainloop()
+
+    def handleSubIpInput(self, input):
+        text = input.get(1.0, "end-1c")
+        ip, port = text.split(':')
+
+        if re.match('^[0-9]+$', port) == None:
+            messagebox.showerror(title="Error", message="port is not numeric only")
+            return
+        else:
+            port = int(port)
+        
+        if re.match('^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$', ip) == None:
+            messagebox.showerror(title="Error", message="invalid IP, should be in format: 127.0.0.1:1337")
+            return
+
+        
+        self.ipconfig = {'ip':ip, 'port':port}
+        self.sub.quit()
+        self.sub.destroy()
+
+'''
+screen displayed for metting
+'''
+class MeetMainScreen(Screen):
+    def __init__(self, canvas, game, parent):
+        Screen.__init__(self)
+        self.canvas = canvas
+        self.game = game
+        self.parent = parent
+        self.initDraw()
+        
+
+    def initDraw(self):
+        self.choices = [
+            {'handler' : self.handleJoin, 'id' : self.canvas.create_text(62, 62, anchor="c", text="Join a meet", state=NORMAL)},
+            {'handler':  self.handleCreate, 'id' : self.canvas.create_text(62, 62, anchor="c", text="Create a meet", state=HIDDEN)}
+        ]
+        self.choice = 0
+
+    def handleNext(self):
+        self.choice = (self.choice + 1) % len(self.choices)
+        for i in range(len(self.choices)):
+            if self.choice == i:
+                self.canvas.itemconfigure(self.choices[i]['id'], state=NORMAL)
+            else:
+                self.canvas.itemconfigure(self.choices[i]['id'], state=HIDDEN)
+
+    def handleSelect(self):
+        self.choices[self.choice]['handler']()
+    
+    def handleBack(self):
+        debug('[?] - FrienListScreen.handleBack - ')
+        self.canvas.delete('all')
+        self.game.currentScreen = self.parent
+        self.game.currentScreen.initDraw()
+
+    def handleJoin(self):
+        self.canvas.delete('all')
+        self.game.currentScreen = MeetClientScreen(self.canvas, self.game, self)
+    
+    def handleCreate(self):
+        self.canvas.delete('all')
+        self.game.currentScreen = MeetServerScreen(self.canvas, self.game, self)
+
+'''
+screen displayed for server meeting
+'''
+class MeetServerScreen(Screen, Meet):
+    def __init__(self, canvas, game, parent):
+        Screen.__init__(self)
+        Meet.__init__(self)
+
+        self.canvas = canvas
+        self.game = game
+        self.parent = parent
+        
+        self.server_config = {}
+        self.ipconfig = None
+        self.createIpConfig("Create")
+        
+        self.msg = self.canvas.create_text(62, 62, anchor="c", text="waiting for a friend...", state=NORMAL)
+
+        self.server = MeetServer(self.ipconfig, self.handleMeet)
+        self.server.start()
+
+    def initDraw(self):
+        pass
+
+    def handleNext(self):
+        pass
+
+    def handleSelect(self):
+        pass
+    
+    def handleBack(self):
+        print('[?] - MeetServerScreen.handleBack - ')
+        self.canvas.delete('all')
+        self.game.currentScreen = self.parent
+        self.game.currentScreen.initDraw()
+    
+    def handleMeet(self, client):
+        client.send(self.game.tamagotchi.toJSON().encode())
+        data = client.recv(1024)
+        friend = JSON.loads(data.decode())
+        self.game.tamagotchi.addFriend(friend)
+        print("[+] - have meet someone : %s" % friend)
+        self.canvas.itemconfigure(self.msg, text="nice to meet you")
+        self.canvas.create_text(62, 62+LINE_HEIGHT, anchor="c", text=friend['name'], state=NORMAL)
+
+'''
+screen displayed for client meeting
+'''
+class MeetClientScreen(Screen, Meet):
+    def __init__(self, canvas, game, parent):
+        Screen.__init__(self)
+        Meet.__init__(self)
+        
+        self.canvas = canvas
+        self.game = game
+        self.parent = parent
+        
+        self.server_config = {}
+        self.ipconfig = None
+        self.createIpConfig("Connect")
+        
+        self.msg = self.canvas.create_text(62, 62, anchor="c", text="Tying to connect...", state=NORMAL)
+
+        self.client = MeetClient(self.ipconfig, self.handleMeet)
+        self.client.start()
+
+    def initDraw(self):
+        pass
+
+    def handleNext(self):
+        pass
+
+    def handleSelect(self):
+        pass
+    
+    def handleBack(self):
+        print('[?] - MeetServerScreen.handleBack - ')
+        self.canvas.delete('all')
+        self.game.currentScreen = self.parent
+        self.game.currentScreen.initDraw()
+    
+    def handleMeet(self, client):
+        data = client.recv(1024)
+        client.send(self.game.tamagotchi.toJSON().encode())
+        friend = JSON.loads(data.decode())
+        self.game.tamagotchi.addFriend(friend)
+        print("[+] - have meet someone ! : %s" % friend)
+
+        self.canvas.itemconfigure(self.msg, text="nice to meet you")
+        self.canvas.create_text(62, 62+LINE_HEIGHT, anchor="c", text=friend['name'], state=NORMAL)
 
 '''
 screen displayed when the tamagotchi is dead
@@ -68,13 +248,32 @@ class FrienListScreen(Screen):
         self.game = game
         self.parent = parent
 
-        self.canvas.create_text(62, 62, anchor="c", text="Friends")
+        self.initDraw()
 
     def initDraw(self):
-        pass
+        self.canvas.create_text(62, 0, anchor="n", text="Friends")
+        self.lines = [self.canvas.create_text(62, LINE_HEIGHT * i, anchor="n", text="", state=HIDDEN) for i in range(1, 8)]
+        self.page = 0
+        self.updateDisplay()
+        
+
+    def updateDisplay(self):
+        if len(self.game.tamagotchi.friends) == 0:
+            return
+
+        for i in range(7):
+            idx = int(i + (7 * self.page))
+            if idx < len(self.game.tamagotchi.friends):
+                self.canvas.itemconfigure(self.lines[i], text=self.game.tamagotchi.friends[idx]['name'])
+                self.canvas.itemconfigure(self.lines[i], state=NORMAL)
+            else:
+                self.canvas.itemconfigure(self.lines[i], state=HIDDEN)
+
 
     def handleNext(self):
-        pass
+        nbMaxPages = int(len(self.game.tamagotchi.friends)/7)
+        self.page = (self.page + 1) % (nbMaxPages + 1)
+        self.updateDisplay()
 
     def handleSelect(self):
         pass
@@ -94,8 +293,6 @@ class ShowStatsScreen(Screen):
         self.canvas = canvas
         self.game = game
         self.parent = parent
-
-        self.icon          = PhotoImage(file = "images/perso_resize.png")
 
         # TODO : use real image not placeholder ...
         self.i_male        = PhotoImage(file = "images/menu_disabled_placeholder.png")
@@ -317,8 +514,8 @@ class MainScreen(Screen):
         pass
 
     def handleCommuniquer(self):
-        debug("[+] - MainScreen.handleCommuniquer - Not implemented yet")
-        pass
+        self.canvas.delete('all')
+        self.game.currentScreen = MeetMainScreen(self.canvas, self.game, self)
 
     def handleShowStats(self):
         self.canvas.delete('all')

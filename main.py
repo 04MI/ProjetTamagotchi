@@ -22,16 +22,9 @@ def main():
 
     tamagotchi = None
 
-    if exists("history.txt"):
-        his = ut.read_history("history.txt")
-        health    = float(his['health'])
-        gender    = his['gender']
-        hunger    = float(his['hunger'])
-        happiness = float(his['happiness'])
-        sickness  = float(his['sickness'])
-        lifetime  = int(his['lifetime'])
-        name = his['name']
-        tamagotchi =  Tamagotchi(name,health, gender, hunger, happiness, sickness, lifetime)
+    if exists("history.json"):
+        data = open("history.json").read()
+        tamagotchi = Tamagotchi.fromJSON(data)
     else:
         # TODO:  works for now but should be improved.
         root = Tk()
