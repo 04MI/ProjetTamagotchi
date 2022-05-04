@@ -28,7 +28,7 @@ class Tamagotchi():
     '''
     Construct a new tamagotchi with the provided parameters
     '''
-    def __init__(self, name, health, gender, hunger, happiness, sickness, lifetime, friends=[]):
+    def __init__(self, name, health, gender, hunger, happiness, sickness, lifetime, friends=[], scores=[]):
         logging.debug(f'[Tamagotchi.__init__({health},{gender},{hunger},{happiness},{sickness})] - performing __init__')
 
         self.name = name
@@ -39,6 +39,7 @@ class Tamagotchi():
         self.sickness = sickness
         self.lifetime = lifetime
         self.friends = friends
+        self.scores = scores
 
         self.updateEvolution()
 
@@ -147,7 +148,8 @@ class Tamagotchi():
             data['happiness'],
             data['sickness'],
             data['lifetime'],
-            data['friends']
+            data['friends'],
+            data['scores']
         )
 
     def toJSON(self):
@@ -159,6 +161,7 @@ class Tamagotchi():
             'happiness' : self.happiness,
             'sickness' : self.sickness,
             'lifetime' : self.lifetime,
-            'friends' : self.friends
+            'friends' : self.friends,
+            'scores' : self.scores
         }
         return json.dumps(obj)

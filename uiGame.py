@@ -4,10 +4,12 @@ from tkinter import *
 from tkinter import messagebox
 from time import sleep
 from utils import Action, Actions
-from network import MeetServer, MeetClient
 import json as JSON
 from logging import debug, info
 import re
+
+from network import MeetServer, MeetClient
+from dinogame import DinoGame
 
 LINE_HEIGHT = 16
 
@@ -19,7 +21,6 @@ class Screen:
         self.current = 0
 
     def handleNext(self):
-        print(len(self.options))
         self.current = (self.current + 1) % len(self.options)
         debug("[?]  - Screen.handleNext - current = %d" % self.current)
     
@@ -75,6 +76,41 @@ class Meet:
         self.ipconfig = {'ip':ip, 'port':port}
         self.sub.quit()
         self.sub.destroy()
+
+class GameScreen(Screen):
+    def __init__(self, canvas, game, parent):
+        Screen.__init__(self)
+        self.canvas = canvas
+        self.game = game
+        self.parent = parent
+
+        self.game.is_paused = True
+
+        scores = self.game.tamagotchi.scores
+        highscore = max(scores) if len(scores) > 0 else 0
+        self.dinoGame = DinoGame(canvas, highscore)
+
+    def initDraw(self):
+        pass
+
+    def handleNext(self):
+        pass
+    
+    def handleBack(self):
+        #TODO : save the score ? 
+        self.game.tamagotchi.scores.append(self.dinoGame.score)
+        self.dinoGame.stop()
+        # Quit
+        self.game.is_paused = False
+        self.canvas.delete('all')
+        self.game.currentScreen = self.parent
+        self.game.currentScreen.initDraw()
+    
+    def handleSelect(self):
+        self.dinoGame.jump()
+
+    def update(self):
+        pass
 
 '''
 screen displayed for metting
@@ -510,8 +546,9 @@ class MainScreen(Screen):
         debug("[+] - MainScreen.handleSoigner - donne du soin")
 
     def handleJouer(self):
+        self.canvas.delete('all')
+        self.game.currentScreen = GameScreen(self.canvas, self.game, self)
         debug("[+] - MainScreen.handleJouer - Not implemented yet")
-        pass
 
     def handleCommuniquer(self):
         self.canvas.delete('all')
@@ -556,6 +593,7 @@ class UiGame(Game):
 
         self.tickrate = tickrate
         self.tamagotchi = tamagotchi
+        self.isPaused = False
 
         self.root = Tk()
         self.root.resizable(0,0)
@@ -593,14 +631,16 @@ class UiGame(Game):
 
     def _run(self, mutex):
         while True:
-            if self.isEnded():
-                self.update()
-                break
+            if not self.isPaused:
+                if self.isEnded():
+                    self.update()
+                    break
 
-            mutex.acquire()
-            self.tick()
-            mutex.release()
-            self.update()
+                mutex.acquire()
+                self.tick()
+                mutex.release()
+                self.update()
+
             sleep(1 / self.tickrate)
 
     def run(self):
